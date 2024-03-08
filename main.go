@@ -10,22 +10,17 @@ import (
 )
 
 func main() {
-	_, err := database.Koneksi()
+	db, err := database.Koneksi()
 	if err!= nil {
     fmt.Println(err)
 		return
   }	
-	fmt.Println("connecting to database")
 	
 	r := gin.Default()
-	routes.UserRoutes(r)
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
+	routes.UserRoutes(r,db)
+	
 	r.NoRoute(func(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/")
 	})
-	r.Run(":3000") // listen and serve on 0.0.0.0:8080
+	r.Run(":3000") 
 }

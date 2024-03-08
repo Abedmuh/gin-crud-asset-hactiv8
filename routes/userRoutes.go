@@ -4,19 +4,17 @@ import (
 	controllers "tempt-go-rest/controller"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func UserRoutes(router *gin.Engine) {
-	userHandler := controllers.NewUserController()
-	roleHandler := controllers.NewRoleController()
+func UserRoutes(r *gin.Engine, db *gorm.DB) {
+	roleHandler := controllers.NewRoleController(db)
 
-	// user
-	router.POST("/user/register", userHandler.CreateUser)
+	userPath := r.Group("/user/role")
 
-	// role
-	router.POST("/user/role", roleHandler.CreateRole)
-	router.GET("/user/role/", roleHandler.GetAllRoles)
-	router.GET("/user/role/:id", roleHandler.GetRoleByID)
-	router.PUT("/user/role/:id",roleHandler.UpdateRole)
-	router.DELETE("/user/role/:id", roleHandler.DeleteRole)
+	userPath.POST("/", roleHandler.CreateRole)
+	userPath.GET("/", roleHandler.GetAllRoles)
+	userPath.GET("/:id", roleHandler.GetRoleByID)
+	userPath.PUT("/:id",roleHandler.UpdateRole)
+	userPath.DELETE("/:id", roleHandler.DeleteRole)
 }

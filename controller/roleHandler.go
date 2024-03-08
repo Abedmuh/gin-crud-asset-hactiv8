@@ -5,29 +5,29 @@ package controllers
 import (
 	"fmt"
 	"net/http"
-	"tempt-go-rest/database"
 	"tempt-go-rest/models"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-type RoleController struct{}
-
-func NewRoleController() *RoleController {
-	return &RoleController{}
+type RoleController struct {
+	DB *gorm.DB
 }
 
-// CreateRole digunakan untuk membuat pengguna baru
+func NewRoleController(db *gorm.DB) *RoleController {
+	return &RoleController{DB: db}
+}
+
 func (rc *RoleController) CreateRole(c *gin.Context) {
 	var role models.Role
 
 	if err := c.ShouldBindJSON(&role); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	db := database.DB
-	result := db.Create(&role)
+	result := rc.DB.Create(&role)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
@@ -35,14 +35,14 @@ func (rc *RoleController) CreateRole(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{
 		"status": "Berhasil tambah data",
-		"role": role})
+		"role":   role,
+	})
 }
 
 func (rc *RoleController) GetAllRoles(c *gin.Context) {
-	db := database.DB
 
 	var roles []models.Role
-	result := db.Find(&roles)
+	result := rc.DB.Find(&roles)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get roles"})
 		return
@@ -54,10 +54,9 @@ func (rc *RoleController) GetAllRoles(c *gin.Context) {
 
 func (rc *RoleController) GetRoleByID(c *gin.Context) {
 	id := c.Param("id")
-	db := database.DB
 
 	var role models.Role
-	result := db.First(&role, id)
+	result := rc.DB.First(&role, id)
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Role not found"})
 		return
@@ -69,10 +68,8 @@ func (rc *RoleController) GetRoleByID(c *gin.Context) {
 func (rc *RoleController) UpdateRole(c *gin.Context) {
 	id := c.Param("id")
 
-	db := database.DB
-
 	var role models.Role
-	result := db.First(&role, id)
+	result := rc.DB.First(&role, id)
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Role not found"})
 		return
@@ -83,7 +80,7 @@ func (rc *RoleController) UpdateRole(c *gin.Context) {
 		return
 	}
 
-	result = db.Save(&role)
+	result = rc.DB.Save(&role)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update role"})
 		return
@@ -97,16 +94,15 @@ func (rc *RoleController) UpdateRole(c *gin.Context) {
 func (rc *RoleController) DeleteRole(c *gin.Context) {
 	id := c.Param("id")
 
-	db := database.DB
 	fmt.Println("mencoba")
 	var Role models.Role
-	result := db.First(&Role, id)
+	result := rc.DB.First(&Role, id)
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Role not found"})
 		return
 	}
 
-	result = db.Delete(&Role)
+	result = rc.DB.Delete(&Role)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete role"})
 		return
